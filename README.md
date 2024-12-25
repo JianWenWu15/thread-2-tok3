@@ -2,7 +2,7 @@
 
 ### 🚀 Project Motivation
 
-Social media has taken over as a primary form of entertainment, with platforms like TikTok, YouTube Shorts, and Instagram Reels offering quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AITA posts) over entertaining visuals such as Minecraft parkour. These videos have proven to be a goldmine, generating significant revenue for content creators.
+Social media has taken over as a primary form of entertainment, with platforms like TikTok, YouTube Shorts, and Instagram Reels offering quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AITA posts) over entertaining visuals such as Minecraft parkour. These videos have proven to be a goldmine, generating significant revenue for content creators🤑.
 
 As a CS student, I thought:
 “Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER. MUHEHEHE!”
