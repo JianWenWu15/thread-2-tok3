@@ -74,10 +74,10 @@ This application automates the process of creating short-form videos by:
    - Replace the placeholders with your Reddit API credentials.
      
 3. **Background Video Usage**:
-- The background video file (`minecraft_background.mp4.zip`) is included in the repository for easier transfer and storage.
-
+   
 - **Download the `.zip` File:**
-   Navigate to the `assets` directory (or the appropriate folder) and download the `minecraft_background.zip` file.
+   Download the background video file (`minecraft_background.mp4.zip`): https://drive.google.com/drive/folders/1llsOSK_-u9WCt_pQtkhjDl6Rhpq9pDm0?usp=sharing
+  
 - **Unzip the File:**
    - **On Windows:** Right-click the `.zip` file and select **Extract All...**.
    - **On macOS:** Double-click the `.zip` file to extract its contents.
@@ -85,7 +85,7 @@ This application automates the process of creating short-form videos by:
      ```bash
      unzip minecraft_background.mp4.zip
      ```
-   After extraction, you should see `minecraft_background.mp4`.
+  
 - **Place the Video:**
    Ensure the extracted file (`minecraft_background.mp4`) is placed in the correct directory as specified by the application configuration (e.g., `backend/static`).
 
