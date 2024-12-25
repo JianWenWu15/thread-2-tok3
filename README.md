@@ -72,15 +72,31 @@ This application automates the process of creating short-form videos by:
      REDIRECT_URI=your_redirect_uri
      ```
    - Replace the placeholders with your Reddit API credentials.
+     
+3. **Background Video Usage**:
+- The background video file (`minecraft_background.zip`) is included in the repository for easier transfer and storage.
 
-3. **Run the App**:
+- **Download the `.zip` File:**
+   Navigate to the `assets` directory (or the appropriate folder) and download the `minecraft_background.zip` file.
+- **Unzip the File:**
+   - **On Windows:** Right-click the `.zip` file and select **Extract All...**.
+   - **On macOS:** Double-click the `.zip` file to extract its contents.
+   - **On Linux:** Use the `unzip` command in the terminal:
+     ```bash
+     unzip minecraft_background.zip
+     ```
+   After extraction, you should see `minecraft_background.mp4`.
+- **Place the Video:**
+   Ensure the extracted file (`minecraft_background.mp4`) is placed in the correct directory as specified by the application configuration (e.g., `backend/static`).
+
+4. **Run the App**:
    - Navigate to the root directory:
      ```bash
      backend/venv/bin/python backend/app.py
      ```
    - The script will fetch a story, generate narration, and create the video.
 
-4. **Output**:
+5. **Output**:
    - The final video (`generated_video.mp4`) and audio (`narration.mp3`) files will appear in the root directory.
 
 ## 🛤️ Future Enhancements
