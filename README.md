@@ -21,22 +21,27 @@ This application automates the process of creating short-form videos by:
 - Multi-Platform Compatibility: Produces videos optimized for TikTok, YouTube Shorts, Instagram Reels, etc.
 - Reddit Integration: Dynamically fetches top stories from subreddits like r/AITA.
 - Text-to-Speech: Generates smooth, natural-sounding voiceovers.
-- Video Automation: Combines narration and engaging backgrounds into a single polished video.
+- Video Automation: Combines narration, captions, and engaging backgrounds into a single polished video.
 - Simple Web Interface: Users can generate videos with a single click and download them instantly.
 
 ### 🔧 Technologies Used
 
-Backend
+🛠️ **Backend**: Python
+  - PRAW for Reddit API scraping
+  - gTTS for text-to-speech
+  - moviepy for video editing
+  - Flask for serving the web interface
+ 
+ 💅 **Frontend**: HTML, CSS, JavaScript, React
 
-Frontend
-
-Tools
+🔩 **Tools**: FFmpeg for video/audio processing
 
 ### 🌟 How It Works
 1.	Click “Generate Video”: Start the process via the user-friendly web interface.
 2.	Automated Magic:
     - Scrapes a popular Reddit story.
     - Converts the story into narrated audio.
+    - Adds captions for the audio.
     - Combines the narration with a Minecraft parkour video or other engaging backgrounds.
 3.	Download & Post: Once the video is ready, download it and share it across platforms like TikTok, YouTube Shorts, or Instagram Reels.
 
@@ -47,7 +52,6 @@ Tools
 - Support for multiple subreddits and advanced filtering (e.g., engagement thresholds).
 - Customizable narration voices and video backgrounds.
 - Direct integration with TikTok, YouTube, and Instagram APIs for auto-posting.
-- Captions to increase accessibility.
 
 ### 📜 License
 This project is open-source under the MIT License.
