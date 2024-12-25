@@ -28,7 +28,7 @@ This application automates the process of creating short-form videos by:
 
 🛠️ **Backend**: Python
   - PRAW for Reddit API scraping
-  - gTTS for text-to-speech
+  - pyttsx3 for text-to-speech
   - moviepy for video editing
   - Flask for serving the web interface
  
