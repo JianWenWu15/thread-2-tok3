@@ -12,14 +12,14 @@ This project was born from that thought—a tool to transform Reddit stories int
 ## 🛠️ What Does This Project Do?
 
 This application automates the process of creating short-form videos by:
-1.	Scraping Reddit Stories: Fetches engaging stories from threads like r/AITA, based on popularity.
+1.	Scraping Reddit Stories: Fetches engaging stories from threads like r/AmItheAsshole, based on popularity.
 2.	Generating Narration: Converts the story text into AI-generated narrator audio.
 3.	Creating Videos: Combines narration with a Minecraft parkour or other background video and adds captions.
 4.	Providing Downloads: Allows users to download the completed, ready-to-post video.
 
 ## 💡 Key Features
 - Multi-Platform Compatibility: Produces videos optimized for TikTok, YouTube Shorts, Instagram Reels, etc.
-- Reddit Integration: Dynamically fetches top stories from subreddits like r/AITA.
+- Reddit Integration: Dynamically fetches top stories from subreddits like r/AmItheAsshole.
 - Text-to-Speech: Generates smooth, natural-sounding voiceovers.
 - Video Automation: Combines narration, captions, and engaging backgrounds into a single polished video.
 - Simple Web Interface: Users can generate videos with a single click and download them instantly.
