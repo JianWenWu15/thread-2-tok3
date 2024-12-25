@@ -2,54 +2,94 @@
 
 ### 🚀 Project Motivation
 
-Social media has taken over as a primary form of entertainment, with platforms like TikTok, YouTube Shorts, and Instagram Reels offering quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AITA posts) over entertaining visuals such as Minecraft parkour. These videos have proven to be a goldmine, generating significant revenue for content creators🤑.
+Social media platforms like TikTok, YouTube Shorts, and Instagram Reels are dominating the entertainment space with quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AmItheAsshole posts) over dynamic visuals such as Minecraft parkour. These videos have proven to be highly lucrative for content creators 🤑.
 
 As a CS student, I thought:
-“Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER. MUHEHEHE!”
+**“Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER. MUHEHEHE!”**
 
-This project was born from that thought—a tool to transform Reddit stories into short-form videos ready to dominate TikTok, YouTube Shorts, Instagram Reels, or any other vertical video platform. It combines automation, storytelling, and content creation to save time and help creators scale their efforts.
+This project was born from that thought—a tool to transform Reddit stories into short-form videos ready to dominate TikTok, YouTube Shorts, Instagram Reels, or any other vertical video platform.
 
-### 🛠️ What Does This Project Do?
+
+## 🛠️ What Does This Project Do?
 
 This application automates the process of creating short-form videos by:
-1.	Scraping Reddit Stories: Fetches engaging stories from threads like r/AITA, based on popularity.
-2.	Generating Narration: Converts the story text into AI-generated narrator audio.
-3.	Creating Videos: Combines narration with a Minecraft parkour or other background video and adds captions.
-4.	Providing Downloads: Allows users to download the completed, ready-to-post video.
-
-### 💡 Key Features
-- Multi-Platform Compatibility: Produces videos optimized for TikTok, YouTube Shorts, Instagram Reels, etc.
-- Reddit Integration: Dynamically fetches top stories from subreddits like r/AITA.
-- Text-to-Speech: Generates smooth, natural-sounding voiceovers.
-- Video Automation: Combines narration and engaging backgrounds into a single polished video.
-- Simple Web Interface: Users can generate videos with a single click and download them instantly.
-
-### 🔧 Technologies Used
-
-Backend
-
-Frontend
-
-Tools
-
-### 🌟 How It Works
-1.	Click “Generate Video”: Start the process via the user-friendly web interface.
-2.	Automated Magic:
-    - Scrapes a popular Reddit story.
-    - Converts the story into narrated audio.
-    - Combines the narration with a Minecraft parkour video or other engaging backgrounds.
-3.	Download & Post: Once the video is ready, download it and share it across platforms like TikTok, YouTube Shorts, or Instagram Reels.
-
-### 📦 How to Use
+1. **Scraping Reddit Stories**: Fetches popular stories from threads like r/AmItheAsshole.
+2. **Generating Narration**: Converts the story text into AI-generated narrator audio.
+3. **Creating Videos**: Combines narration with a Minecraft parkour or other background video.
+4. **Providing Downloads**: Outputs a completed, ready-to-post video in MP4 format.
 
 
-### 🛤️ Future Enhancements
-- Support for multiple subreddits and advanced filtering (e.g., engagement thresholds).
-- Customizable narration voices and video backgrounds.
-- Direct integration with TikTok, YouTube, and Instagram APIs for auto-posting.
-- Captions to increase accessibility.
+## 💡 Key Features
 
-### 📜 License
+- **Multi-Platform Compatibility**: Produces videos optimized for TikTok, YouTube Shorts, Instagram Reels, etc.
+- **Reddit Integration**: Dynamically fetches top stories from subreddits like r/AmItheAsshole.
+- **Text-to-Speech**: Generates smooth, natural-sounding voiceovers using gTTS.
+- **Video Automation**: Combines narration and engaging backgrounds into a single polished video.
+- **Effortless Output**: Users can generate videos with minimal effort and share them instantly.
+
+
+## 🔧 Technologies Used
+
+### 🛠️ Backend:
+- **Python**:
+  - **PRAW**: Reddit API integration for story scraping.
+  - **gTTS**: Converts text to audio for narration.
+  - **moviepy**: Handles video editing, background cropping, and audio integration.
+  - **Flask**: Provides a simple API for interacting with the app.
+
+### 🔩 Tools:
+- **FFmpeg**: Processes video and audio files efficiently.
+
+
+## 🌟 How It Works
+
+1. **Story Selection**:
+   - Fetches a random popular story from a subreddit like r/AmItheAsshole.
+2. **Narration**:
+   - Converts the story's title and body into a smooth voiceover using gTTS.
+3. **Video Creation**:
+   - Combines the narration with a dynamic background video.
+   - Crops the video to a 9:16 aspect ratio for TikTok compatibility.
+4. **Output**:
+   - Generates a ready-to-post video in MP4 format.
+
+## 📦 How to Use
+
+1. **Setup**:
+   - Clone the repository.
+   - Navigate to the `backend` directory and set up the virtual environment:
+     ```bash
+     python3 -m venv venv
+     source venv/bin/activate
+     pip install -r requirements.txt
+     ```
+
+2. **Environment Variables**:
+   - Create a `.env` file in the `backend` directory with the following keys:
+     ```plaintext
+     CLIENT_ID=your_reddit_client_id
+     CLIENT_SECRET=your_reddit_client_secret
+     REDIRECT_URI=your_redirect_uri
+     ```
+   - Replace the placeholders with your Reddit API credentials.
+
+3. **Run the App**:
+   - Navigate to the root directory:
+     ```bash
+     backend/venv/bin/python backend/app.py
+     ```
+   - The script will fetch a story, generate narration, and create the video.
+
+4. **Output**:
+   - The final video (`generated_video.mp4`) and audio (`narration.mp3`) files will appear in the root directory.
+
+## 🛤️ Future Enhancements
+
+- **Advanced Filtering**: Filter stories by engagement metrics, length, or keywords.
+- **Custom Voices and Backgrounds**: Allow users to upload their own narration voices and visuals.
+- **Caption Support**: Add dynamic captions to videos for accessibility and enhanced engagement.
+- **API Integrations**: Enable direct posting to TikTok, YouTube Shorts, and Instagram Reels.
+
+## 📜 License
+
 This project is open-source under the MIT License.
-
-Happy automating and may your videos go viral! 🎥✨

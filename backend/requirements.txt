@@ -2,3 +2,5 @@ praw
 gtts
 moviepy
 Flask
+flask-cors
+gunicorn
