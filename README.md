@@ -55,5 +55,3 @@ This application automates the process of creating short-form videos by:
 
 ## 📜 License
 This project is open-source under the MIT License.
-
-Happy automating and may your videos go viral! 🎥✨
