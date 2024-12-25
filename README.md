@@ -74,9 +74,9 @@ This application automates the process of creating short-form videos by:
    - Replace the placeholders with your Reddit API credentials.
 
 3. **Run the App**:
-   - Navigate to the `backend` directory:
+   - Navigate to the root directory:
      ```bash
-     ./venv/bin/python app.py
+     backend/venv/bin/python backend/app.py
      ```
    - The script will fetch a story, generate narration, and create the video.
 
