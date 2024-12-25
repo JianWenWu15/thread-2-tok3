@@ -9,7 +9,7 @@ As a CS student, I thought:
 
 This project was born from that thought—a tool to transform Reddit stories into short-form videos ready to dominate TikTok, YouTube Shorts, Instagram Reels, or any other vertical video platform. It combines automation, storytelling, and content creation to save time and help creators scale their efforts.
 
-### 🛠️ What Does This Project Do?
+## 🛠️ What Does This Project Do?
 
 This application automates the process of creating short-form videos by:
 1.	Scraping Reddit Stories: Fetches engaging stories from threads like r/AITA, based on popularity.
@@ -17,14 +17,14 @@ This application automates the process of creating short-form videos by:
 3.	Creating Videos: Combines narration with a Minecraft parkour or other background video and adds captions.
 4.	Providing Downloads: Allows users to download the completed, ready-to-post video.
 
-### 💡 Key Features
+## 💡 Key Features
 - Multi-Platform Compatibility: Produces videos optimized for TikTok, YouTube Shorts, Instagram Reels, etc.
 - Reddit Integration: Dynamically fetches top stories from subreddits like r/AITA.
 - Text-to-Speech: Generates smooth, natural-sounding voiceovers.
 - Video Automation: Combines narration, captions, and engaging backgrounds into a single polished video.
 - Simple Web Interface: Users can generate videos with a single click and download them instantly.
 
-### 🔧 Technologies Used
+## 🔧 Technologies Used
 
 🛠️ **Backend**: Python
   - PRAW for Reddit API scraping
@@ -36,7 +36,7 @@ This application automates the process of creating short-form videos by:
 
 🔩 **Tools**: FFmpeg for video/audio processing
 
-### 🌟 How It Works
+## 🌟 How It Works
 1.	Click “Generate Video”: Start the process via the user-friendly web interface.
 2.	Automated Magic:
     - Scrapes a popular Reddit story.
@@ -45,15 +45,15 @@ This application automates the process of creating short-form videos by:
     - Combines the narration with a Minecraft parkour video or other engaging backgrounds.
 3.	Download & Post: Once the video is ready, download it and share it across platforms like TikTok, YouTube Shorts, or Instagram Reels.
 
-### 📦 How to Use
+## 📦 How to Use
 
 
-### 🛤️ Future Enhancements
+## 🛤️ Future Enhancements
 - Support for multiple subreddits and advanced filtering (e.g., engagement thresholds).
 - Customizable narration voices and video backgrounds.
 - Direct integration with TikTok, YouTube, and Instagram APIs for auto-posting.
 
-### 📜 License
+## 📜 License
 This project is open-source under the MIT License.
 
 Happy automating and may your videos go viral! 🎥✨
