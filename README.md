@@ -76,7 +76,10 @@ This application automates the process of creating short-form videos by:
 3. **Background Video Usage**:
    
 - **Download the `.zip` File:**
-   Download the background video file (`minecraft_background.mp4.zip`): https://drive.google.com/drive/folders/1llsOSK_-u9WCt_pQtkhjDl6Rhpq9pDm0?usp=sharing
+  
+   Download the background video file (`minecraft_background.mp4.zip`) at:
+  
+   **OR upload your own mp4 file for the video background in `backend/static` and move on to step 4**
   
 - **Unzip the File:**
    - **On Windows:** Right-click the `.zip` file and select **Extract All...**.
