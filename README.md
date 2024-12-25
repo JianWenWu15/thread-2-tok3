@@ -1,5 +1,7 @@
 # Reddit Story to Short Video Generator
 
+** work in progress **
+
 ### 🚀 Project Motivation
 
 Social media platforms like TikTok, YouTube Shorts, and Instagram Reels are dominating the entertainment space with quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AmItheAsshole posts) over dynamic visuals such as Minecraft parkour. These videos have proven to be highly lucrative for content creators 🤑.
