@@ -4,7 +4,7 @@
 
 ### 🚀 Project Motivation
 
-Social media platforms like TikTok, YouTube Shorts, and Instagram Reels are dominating the entertainment space with quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AmItheAsshole posts) over dynamic visuals such as Minecraft parkour. These videos have proven to be highly lucrative for content creators 🤑.
+Social media platforms like TikTok, YouTube Shorts, and Instagram Reels are dominating the entertainment space with quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AmItheAsshole posts) over dynamic visuals such as Minecraft parkour. These videos have proven to be highly lucrative for content creators.
 
 As a CS student, I thought:
 **“Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER!”**
@@ -103,13 +103,6 @@ This application automates the process of creating short-form videos by:
 
 5. **Output**:
    - The final video (`generated_video.mp4`) and audio (`narration.mp3`) files will appear in the root directory.
-
-## 🛤️ Future Enhancements
-
-- **Advanced Filtering**: Filter stories by engagement metrics, length, or keywords.
-- **Custom Voices and Backgrounds**: Allow users to upload their own narration voices and visuals.
-- **Caption Support**: Add dynamic captions to videos for accessibility and enhanced engagement.
-- **API Integrations**: Enable direct posting to TikTok, YouTube Shorts, and Instagram Reels.
 
 ## 📜 License
 
