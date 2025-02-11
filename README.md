@@ -7,7 +7,7 @@
 Social media platforms like TikTok, YouTube Shorts, and Instagram Reels are dominating the entertainment space with quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AmItheAsshole posts) over dynamic visuals such as Minecraft parkour. These videos have proven to be highly lucrative for content creators 🤑.
 
 As a CS student, I thought:
-**“Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER. MUHEHEHE!”**
+**“Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER!”**
 
 This project was born from that thought—a tool to transform Reddit stories into short-form videos ready to dominate TikTok, YouTube Shorts, Instagram Reels, or any other vertical video platform.
 
