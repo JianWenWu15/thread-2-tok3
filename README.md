@@ -2,17 +2,15 @@
 
 ** work in progress **
 
-### 🚀 Project Motivation
+### Project Motivation
 
 Social media platforms like TikTok, YouTube Shorts, and Instagram Reels are dominating the entertainment space with quick, engaging content that captures millions of views. A popular trend involves creators narrating dramatic Reddit stories (like r/AmItheAsshole posts) over dynamic visuals such as Minecraft parkour. These videos have proven to be highly lucrative for content creators.
 
 As a CS student, I thought:
-**“Why spend hours creating these videos manually when I can automate the process? MORE MONEY, FASTER!”**
-
-This project was born from that thought—a tool to transform Reddit stories into short-form videos ready to dominate TikTok, YouTube Shorts, Instagram Reels, or any other vertical video platform.
+**“Why spend hours creating these videos manually when I can automate the process?”**
 
 
-## 🛠️ What Does This Project Do?
+## What Does This Project Do?
 
 This application automates the process of creating short-form videos by:
 1. **Scraping Reddit Stories**: Fetches popular stories from threads like r/AmItheAsshole.
@@ -21,7 +19,7 @@ This application automates the process of creating short-form videos by:
 4. **Providing Downloads**: Outputs a completed, ready-to-post video in MP4 format.
 
 
-## 💡 Key Features
+## Key Features
 
 - **Multi-Platform Compatibility**: Produces videos optimized for TikTok, YouTube Shorts, Instagram Reels, etc.
 - **Reddit Integration**: Dynamically fetches top stories from subreddits like r/AmItheAsshole.
@@ -30,20 +28,20 @@ This application automates the process of creating short-form videos by:
 - **Effortless Output**: Users can generate videos with minimal effort and share them instantly.
 
 
-## 🔧 Technologies Used
+## Technologies Used
 
-### 🛠️ Backend:
+### Backend:
 - **Python**:
   - **PRAW**: Reddit API integration for story scraping.
   - **gTTS**: Converts text to audio for narration.
   - **moviepy**: Handles video editing, background cropping, and audio integration.
   - **Flask**: Provides a simple API for interacting with the app.
 
-### 🔩 Tools:
+### Tools:
 - **FFmpeg**: Processes video and audio files efficiently.
 
 
-## 🌟 How It Works
+## How It Works
 
 1. **Story Selection**:
    - Fetches a random popular story from a subreddit like r/AmItheAsshole.
@@ -55,7 +53,7 @@ This application automates the process of creating short-form videos by:
 4. **Output**:
    - Generates a ready-to-post video in MP4 format.
 
-## 📦 How to Use
+## How to Use
 
 1. **Setup**:
    - Clone the repository.
