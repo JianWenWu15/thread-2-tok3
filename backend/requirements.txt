@@ -4,3 +4,5 @@ moviepy==1.0.3
 Flask
 flask-cors
 gunicorn
+edge-tts
+pydub
