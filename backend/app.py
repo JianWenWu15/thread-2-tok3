@@ -77,6 +77,77 @@ def process_text(text):
     
     return text
 
+# Helper function to detect story perspective for voice selection
+def detect_story_perspective(text):
+    """Analyze text to determine if story is from male or female perspective."""
+    text_lower = text.lower()
+    
+    # Female indicators
+    female_indicators = [
+        # Self-referential female terms
+        "i'm a woman", "i'm a girl", "i'm female", "as a woman", "as a girl",
+        "i am a woman", "i am a girl", "i am female",
+        
+        # Female relationship terms when used as self-reference
+        "my husband", "my boyfriend", "my fiance", "my ex-husband", "my ex-boyfriend",
+        
+        # Female-specific experiences
+        "i'm pregnant", "i am pregnant", "when i was pregnant", "my pregnancy",
+        "my period", "menstrual", "maternity leave",
+        
+        # Female titles/roles
+        "i'm a mother", "i am a mother", "as a mom", "my children", "my kids",
+        "i'm a wife", "i am a wife", "as a wife",
+        
+        # Female pronouns in self-reference context
+        "i consider myself", "people call me she", "they call me her"
+    ]
+    
+    # Male indicators  
+    male_indicators = [
+        # Self-referential male terms
+        "i'm a man", "i'm a guy", "i'm male", "as a man", "as a guy", 
+        "i am a man", "i am a guy", "i am male",
+        
+        # Male relationship terms when used as self-reference
+        "my wife", "my girlfriend", "my fiancee", "my ex-wife", "my ex-girlfriend",
+        
+        # Male titles/roles
+        "i'm a father", "i am a father", "as a dad", "i'm a husband", "i am a husband",
+        "as a husband",
+        
+        # Male pronouns in self-reference context
+        "people call me he", "they call me him"
+    ]
+    
+    # Count indicators
+    female_count = sum(1 for indicator in female_indicators if indicator in text_lower)
+    male_count = sum(1 for indicator in male_indicators if indicator in text_lower)
+    
+    # Determine perspective
+    if female_count > male_count:
+        return "female"
+    elif male_count > female_count:
+        return "male"
+    else:
+        return "neutral"  # Default to neutral/female voice if unclear
+
+# Helper function to select appropriate voice based on perspective
+def select_voice_for_perspective(text):
+    """Select TTS voice based on story perspective."""
+    perspective = detect_story_perspective(text)
+    
+    voices = {
+        "female": "en-US-AriaNeural",    # Clear, professional female voice
+        "male": "en-US-GuyNeural",       # Clear, professional male voice  
+        "neutral": "en-US-AriaNeural"    # Default to female voice
+    }
+    
+    selected_voice = voices[perspective]
+    print(f"🎤 Detected perspective: {perspective} - Using voice: {selected_voice}")
+    
+    return selected_voice
+
 # Helper function to generate better quality narration
 async def generate_narration_async(text, output_file="narration.wav", voice="en-US-AriaNeural"):
     """Generate high-quality audio from text using Edge TTS."""
@@ -93,8 +164,10 @@ async def generate_narration_async(text, output_file="narration.wav", voice="en-
         print(f"Error generating narration: {e}")
         return None
 
-def generate_narration(text, output_file="narration.wav", voice="en-US-AriaNeural"):
-    """Wrapper for async narration generation."""
+def generate_narration(text, output_file="narration.wav", voice=None):
+    """Wrapper for async narration generation with automatic voice selection."""
+    if voice is None:
+        voice = select_voice_for_perspective(text)
     return asyncio.run(generate_narration_async(text, output_file, voice))
 
 # Helper function to create text image using PIL with better fonts
@@ -250,7 +323,7 @@ def create_synchronized_text_segments(text, audio_duration, words_per_segment=3)
     return segments
 
 # Helper function to add background music
-def add_background_music(video_path, music_folder="static/music", volume=0.15):
+def add_background_music(video_path, music_folder="static/music", volume=0.075):
     """Add background music to video if music files are available."""
     try:
         if not os.path.exists(music_folder):
@@ -334,9 +407,11 @@ def create_video_with_text(input_video_file, input_audio_file, text, output_file
             crop_y2 = crop_y1 + new_height
             video_cropped = video_slice.crop(y1=crop_y1, y2=crop_y2)
         
-        # Note: Removed upscaling to avoid PIL compatibility issues
-        # The video quality will be preserved at its original resolution
-        print(f"📏 Video dimensions: {video_cropped.size[0]}x{video_cropped.size[1]}")
+        # Scale to 1080p (1080x1920 for 9:16 aspect ratio)
+        target_width = 1080
+        target_height = 1920
+        video_cropped = video_cropped.resize((target_width, target_height))
+        print(f"📏 Video scaled to 1080p: {video_cropped.size[0]}x{video_cropped.size[1]}")
 
         # Efficient text overlay creation with font pre-loading
         try:
@@ -466,9 +541,9 @@ if __name__ == "__main__":
         input_audio = os.path.join(os.getcwd(), "narration.wav")  # Changed to WAV for better quality
         output_video = os.path.join(os.getcwd(), "generated_video.mp4")
 
-        # Generate high-quality narration audio
+        # Generate high-quality narration audio with automatic voice selection
         print("🎤 Generating high-quality narration...")
-        narration_path = generate_narration(processed_text, input_audio, voice="en-US-AriaNeural")
+        narration_path = generate_narration(processed_text, input_audio)
 
         if narration_path and os.path.exists(input_video):
             print("🎬 Creating video with text overlays...")
