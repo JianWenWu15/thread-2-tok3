@@ -2,12 +2,20 @@ import praw  # Python Reddit Wrapper
 import edge_tts  # Better TTS
 import asyncio
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, CompositeAudioClip
+from moviepy.video.fx.resize import resize as video_resize
 from dotenv import load_dotenv
 import os
 import random
 import re
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
+
+# Fix for Pillow 10.x compatibility with MoviePy
+try:
+    if not hasattr(Image, 'ANTIALIAS'):
+        Image.ANTIALIAS = Image.LANCZOS
+except AttributeError:
+    pass
 
 # Load environment variables
 load_dotenv()
@@ -29,13 +37,8 @@ VIDEO_CONFIG = {
 
 # Text timing configuration
 TEXT_TIMING_CONFIG = {
-    "speech_rate": 2.0,  # words per second (~120 WPM)
-    "char_duration": 0.12,  # seconds per character
-    "sentence_pause": 0.3,  # pause after sentences
-    "comma_pause": 0.15,  # pause after commas
-    "min_word_duration": 0.5,  # minimum word display time
-    "text_early_display": 0.2,  # show text before speech starts
-    "min_segment_duration": 0.5  # minimum segment duration
+    "text_early_display": 0.1,  # show text slightly before speech starts (reduced from 0.2)
+    "min_segment_duration": 0.8  # minimum segment duration (increased for better sync)
 }
 
 # Reddit API setup
@@ -149,14 +152,15 @@ def select_voice_for_perspective(text):
     return selected_voice
 
 # Helper function to generate better quality narration
-async def generate_narration_async(text, output_file="narration.wav", voice="en-US-AriaNeural"):
-    """Generate high-quality audio from text using Edge TTS."""
+async def generate_narration_async(text, output_file="narration.wav", voice="en-US-AriaNeural", speech_rate="2.0"):
+    """Generate high-quality audio from text using Edge TTS with speed control."""
     try:
         output_path = os.path.join(os.getcwd(), output_file)
         
         # Available voices: en-US-AriaNeural (female), en-US-GuyNeural (male), 
         # en-US-JennyNeural (female), en-US-DavisNeural (male)
-        communicate = edge_tts.Communicate(text, voice)
+        # Speed control: speech_rate can be "0.5" (slow) to "3.0" (fast), "1.0" is normal
+        communicate = edge_tts.Communicate(text, voice, rate=f"+{int((float(speech_rate) - 1.0) * 100)}%")
         await communicate.save(output_path)
         
         return output_path
@@ -164,19 +168,19 @@ async def generate_narration_async(text, output_file="narration.wav", voice="en-
         print(f"Error generating narration: {e}")
         return None
 
-def generate_narration(text, output_file="narration.wav", voice=None):
-    """Wrapper for async narration generation with automatic voice selection."""
+def generate_narration(text, output_file="narration.wav", voice=None, speech_rate="1.5"):
+    """Wrapper for async narration generation with automatic voice selection and speed control."""
     if voice is None:
         voice = select_voice_for_perspective(text)
-    return asyncio.run(generate_narration_async(text, output_file, voice))
+    
+    print(f"🎤 Generating narration at {speech_rate}x speed...")
+    return asyncio.run(generate_narration_async(text, output_file, voice, speech_rate))
 
 # Helper function to create text image using PIL with better fonts
 # Optimized helper function to create text images with pre-loaded font
 def create_optimized_text_image(text, font_obj, width=1100, height=220):
     """Creates an optimized text image using a pre-loaded font object for efficiency."""
     try:
-        print(f"🚀 Creating optimized text image for: {text[:20]}...")
-        
         # Use 2x resolution for anti-aliasing (quality optimization)
         scale_factor = 2
         high_width = width * scale_factor
@@ -188,9 +192,6 @@ def create_optimized_text_image(text, font_obj, width=1100, height=220):
         
         # Split text into lines and calculate layout
         lines = text.split('\n')
-        print(f"📏 Text split into {len(lines)} lines")
-        
-        # Use pre-loaded font (major performance improvement)
         font = font_obj
         
         # Calculate text dimensions and positioning
@@ -245,47 +246,28 @@ def create_optimized_text_image(text, font_obj, width=1100, height=220):
 
 # Helper function to estimate speech timing
 def estimate_speech_timing(text, total_duration):
-    """Estimate when each word will be spoken based on average speech rate."""
+    """Estimate when each word will be spoken based on actual audio duration."""
     words = text.split()
-    # More realistic speech rate: ~120 words per minute = 2.0 words per second
-    # This accounts for natural pauses and slower TTS speech
-    estimated_speech_rate = TEXT_TIMING_CONFIG["speech_rate"]
+    if not words:
+        return []
     
-    # Calculate timing for each word
+    # Simple linear distribution based on actual audio duration
+    time_per_word = total_duration / len(words)
+    
     word_timings = []
-    current_time = 0
-    
-    for word in words:
-        # More conservative timing with better punctuation handling
-        base_duration = len(word) * TEXT_TIMING_CONFIG["char_duration"]
-        
-        # Add extra time for punctuation and longer words
-        if word.endswith(('.', '!', '?')):
-            base_duration += TEXT_TIMING_CONFIG["sentence_pause"]
-        elif word.endswith(','):
-            base_duration += TEXT_TIMING_CONFIG["comma_pause"]
-        
-        word_duration = max(TEXT_TIMING_CONFIG["min_word_duration"], base_duration)
+    for i, word in enumerate(words):
+        start_time = i * time_per_word
+        end_time = start_time + time_per_word
         word_timings.append({
             'word': word,
-            'start': current_time,
-            'end': current_time + word_duration
+            'start': start_time,
+            'end': end_time
         })
-        current_time += word_duration
-    
-    # Scale to fit actual audio duration
-    if word_timings:
-        total_estimated_time = word_timings[-1]['end']
-        time_scale = total_duration / total_estimated_time
-        
-        for timing in word_timings:
-            timing['start'] *= time_scale
-            timing['end'] *= time_scale
     
     return word_timings
 
 # Helper function to create synchronized text segments
-def create_synchronized_text_segments(text, audio_duration, words_per_segment=3):
+def create_synchronized_text_segments(text, audio_duration, words_per_segment=4):
     """Create text segments that are synchronized with speech timing."""
     word_timings = estimate_speech_timing(text, audio_duration)
     segments = []
@@ -314,16 +296,22 @@ def create_synchronized_text_segments(text, audio_duration, words_per_segment=3)
                     # Recalculate duration to maintain original end time
                     segment_duration = max(TEXT_TIMING_CONFIG["min_segment_duration"], original_end - segment_start)
             
-            segments.append({
-                'text': segment_text,
-                'start': segment_start,
-                'duration': segment_duration
-            })
+            # Ensure we don't go beyond audio duration
+            if segment_start + segment_duration > audio_duration:
+                segment_duration = max(0.3, audio_duration - segment_start)
+            
+            # Only add segment if it's within the audio duration
+            if segment_start < audio_duration:
+                segments.append({
+                    'text': segment_text,
+                    'start': segment_start,
+                    'duration': segment_duration
+                })
     
     return segments
 
 # Helper function to add background music
-def add_background_music(video_path, music_folder="static/music", volume=0.075):
+def add_background_music(video_path, music_folder="static/music", volume=0.055):
     """Add background music to video if music files are available."""
     try:
         if not os.path.exists(music_folder):
@@ -410,15 +398,26 @@ def create_video_with_text(input_video_file, input_audio_file, text, output_file
         # Scale to 1080p (1080x1920 for 9:16 aspect ratio)
         target_width = 1080
         target_height = 1920
-        video_cropped = video_cropped.resize((target_width, target_height))
-        print(f"📏 Video scaled to 1080p: {video_cropped.size[0]}x{video_cropped.size[1]}")
+        # Use fx.resize for better compatibility  
+        video_cropped = video_resize(video_cropped, newsize=(target_width, target_height))
+        
+        # Slow down the video for more relaxed pacing, but match audio duration
+        video_speed_factor = 0.75  # Adjust this value: 1.0 = normal, 0.5 = half speed, 0.8 = 80% speed
+        if video_speed_factor != 1.0:
+            # Slow down video by stretching duration (inverse of speed)
+            original_duration = video_cropped.duration
+            new_duration = original_duration / video_speed_factor
+            video_cropped = video_cropped.set_duration(new_duration)
+        
+        # Ensure video matches audio duration exactly to prevent repetition
+        video_cropped = video_cropped.set_duration(audio_duration)
 
         # Efficient text overlay creation with font pre-loading
         try:
-            print("🎨 Creating synchronized text overlays with optimized rendering...")
+            print("Creating synchronized text overlays...")
             
             # Create synchronized text segments
-            text_segments = create_synchronized_text_segments(text, audio_duration, words_per_segment=3)
+            text_segments = create_synchronized_text_segments(text, audio_duration, words_per_segment=4)
             
             # Pre-load font ONCE for efficiency
             fonts_dir = os.path.join(os.getcwd(), "fonts")
@@ -445,20 +444,15 @@ def create_video_with_text(input_video_file, input_audio_file, text, output_file
             # Pre-load the font object ONCE (major optimization)
             try:
                 font_obj = ImageFont.truetype(selected_font_path, size=128)  # 2x size for quality
-                print(f"✅ Font pre-loaded: {selected_font_path}")
+                print(f"Font loaded: {selected_font_path}")
             except Exception as font_error:
-                print(f"⚠️ Font loading failed: {font_error}")
+                print(f"Font loading failed: {font_error}")
                 font_obj = ImageFont.load_default()
             
             # Create text clips with optimized approach
             text_clips = []
-            print(f"📊 Processing {len(text_segments)} text segments...")
             
             for i, segment in enumerate(text_segments):
-                if i % 20 == 0:  # Progress updates every 20 segments
-                    print(f"📝 Processing segment {i+1}/{len(text_segments)}")
-                
-                # Smart text wrapping
                 words = segment['text'].split()
                 if len(words) > 4:
                     if len(words) <= 6:
@@ -541,9 +535,9 @@ if __name__ == "__main__":
         input_audio = os.path.join(os.getcwd(), "narration.wav")  # Changed to WAV for better quality
         output_video = os.path.join(os.getcwd(), "generated_video.mp4")
 
-        # Generate high-quality narration audio with automatic voice selection
+        # Generate high-quality narration audio with automatic voice selection and 1.5x speed
         print("🎤 Generating high-quality narration...")
-        narration_path = generate_narration(processed_text, input_audio)
+        narration_path = generate_narration(processed_text, input_audio, speech_rate="1.5")
 
         if narration_path and os.path.exists(input_video):
             print("🎬 Creating video with text overlays...")
@@ -561,15 +555,15 @@ if __name__ == "__main__":
                 print("\n" + "="*50)
                 print("VIDEO GENERATION COMPLETE!")
                 print("="*50)
-                print(f"📁 Output file: {final_video_path}")
-                print(f"📊 Original text length: {len(raw_text)} characters")
-                print(f"📊 Processed text length: {len(processed_text)} characters")
-                print(f"🎵 Background music: {'Added' if final_video_path != video_path else 'Not added (no music files found)'}")
+                print(f"Output file: {final_video_path}")
+                print(f"Original text length: {len(raw_text)} characters")
+                print(f"Processed text length: {len(processed_text)} characters")
+                print(f"Background music: {'Added' if final_video_path != video_path else 'Not added (no music files found)'}")
                 print("="*50)
             else:
-                print("❌ Error: Video generation failed.")
+                print("Error: Video generation failed.")
         else:
-            print("❌ Error: Input video or narration file not found.")
+            print("Error: Input video or narration file not found.")
             if not os.path.exists(input_video):
                 print(f"   Missing: {input_video}")
             if not narration_path:
