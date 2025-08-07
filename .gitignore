@@ -1,2 +1,39 @@
 backend/venv/
 .env
+
+# Large video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+
+# Audio files
+*.wav
+*.mp3
+*.m4a
+*.flac
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Generated files
+narration.wav
+generated_video.mp4
+generated_video_with_music.mp4
+temp-audio.m4a
+
+# Font files (if very large)
+fonts/*.ttf
+fonts/*.otf
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
