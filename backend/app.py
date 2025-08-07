@@ -1,18 +1,42 @@
 import praw  # Python Reddit Wrapper
 import edge_tts  # Better TTS
 import asyncio
-from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, CompositeAudioClip, TextClip
-from pydub import AudioSegment
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip, CompositeAudioClip
 from dotenv import load_dotenv
 import os
 import random
 import re
-import textwrap
 from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 
 # Load environment variables
 load_dotenv()
+
+# Video quality configuration
+VIDEO_CONFIG = {
+    "codec": "libx264",
+    "audio_codec": "aac", 
+    "fps": 30,
+    "bitrate": "8000k",
+    "ffmpeg_params": [
+        "-crf", "18",  # High quality encoding
+        "-preset", "slow",  # Better compression
+        "-profile:v", "high",
+        "-level", "4.0", 
+        "-pix_fmt", "yuv420p"
+    ]
+}
+
+# Text timing configuration
+TEXT_TIMING_CONFIG = {
+    "speech_rate": 2.0,  # words per second (~120 WPM)
+    "char_duration": 0.12,  # seconds per character
+    "sentence_pause": 0.3,  # pause after sentences
+    "comma_pause": 0.15,  # pause after commas
+    "min_word_duration": 0.5,  # minimum word display time
+    "text_early_display": 0.2,  # show text before speech starts
+    "min_segment_duration": 0.5  # minimum segment duration
+}
 
 # Reddit API setup
 reddit = praw.Reddit(
@@ -146,160 +170,13 @@ def create_optimized_text_image(text, font_obj, width=1100, height=220):
         print(f"Error creating optimized text image: {e}")
         return None
 
-# Helper function to create text images with better font support
-def create_text_image(text, width=1100, height=220, font_size=64):
-    """Create a high-quality text image using PIL with modern styling."""
-    try:
-        print(f"📝 Creating text image for: {text[:50]}...")
-        
-        # Create image with higher resolution and transparent background
-        # Use 2x resolution for better quality, then scale down for anti-aliasing
-        scale_factor = 2
-        high_width = width * scale_factor
-        high_height = height * scale_factor
-        high_font_size = font_size * scale_factor
-        
-        img = Image.new('RGBA', (high_width, high_height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
-        
-        # Try to use modern fonts first, then fallback to system fonts
-        fonts_dir = os.path.join(os.getcwd(), "fonts")
-        font_paths = [
-            # Local downloaded fonts
-            os.path.join(fonts_dir, "Poppins-Bold.ttf"),
-            os.path.join(fonts_dir, "Oswald-Bold.ttf"),
-            os.path.join(fonts_dir, "Montserrat-Bold.ttf"),
-            os.path.join(fonts_dir, "Inter-Bold.ttf"),
-            # System fonts with good readability (bold variants)
-            "C:/Windows/Fonts/impact.ttf",
-            "C:/Windows/Fonts/arialbd.ttf",
-            "C:/Windows/Fonts/trebucbd.ttf",  # Trebuchet MS Bold
-            "C:/Windows/Fonts/calibrib.ttf",
-            "C:/Windows/Fonts/frankgot.ttf",  # Franklin Gothic
-            "C:/Windows/Fonts/segoeuib.ttf",  # Segoe UI Bold
-            "C:/Windows/Fonts/verdanab.ttf",
-            # Regular fallbacks
-            "C:/Windows/Fonts/arial.ttf",
-            "arial.ttf"
-        ]
-        
-        font = None
-        for font_path in font_paths:
-            try:
-                font = ImageFont.truetype(font_path, high_font_size)
-                print(f"✅ Using font: {font_path}")
-                break
-            except Exception as font_error:
-                continue
-        
-        if font is None:
-            font = ImageFont.load_default()
-            print("⚠️ Using default font")
-        
-        # Split text into lines and measure text properly
-        lines = text.split('\n')
-        print(f"📏 Text split into {len(lines)} lines")
-        
-        # Auto-wrap long lines to prevent cutoff with better logic
-        max_chars_per_line = 18  # Reduced for better mobile viewing
-        wrapped_lines = []
-        for line in lines:
-            if len(line) > max_chars_per_line:
-                words = line.split()
-                current_line = ""
-                for word in words:
-                    # Check if adding the word would exceed the limit
-                    test_line = current_line + (" " if current_line else "") + word
-                    
-                    # Use actual text width measurement instead of character count
-                    bbox = draw.textbbox((0, 0), test_line, font=font or ImageFont.load_default())
-                    test_width = bbox[2] - bbox[0]
-                    max_width = high_width * 0.85  # Use 85% of width for safety margin
-                    
-                    if test_width <= max_width and len(test_line) <= max_chars_per_line:
-                        current_line = test_line
-                    else:
-                        if current_line:
-                            wrapped_lines.append(current_line)
-                        current_line = word
-                if current_line:
-                    wrapped_lines.append(current_line)
-            else:
-                wrapped_lines.append(line)
-        
-        lines = wrapped_lines
-        print(f"📐 Text wrapped into {len(lines)} lines")
-        
-        # Calculate total text dimensions
-        line_heights = []
-        max_line_width = 0
-        line_spacing = int(15 * scale_factor)
-        
-        for line in lines:
-            bbox = draw.textbbox((0, 0), line, font=font)
-            line_height = bbox[3] - bbox[1]
-            line_width = bbox[2] - bbox[0]
-            line_heights.append(line_height)
-            max_line_width = max(max_line_width, line_width)
-        
-        total_text_height = sum(line_heights) + (line_spacing * (len(lines) - 1))
-        
-        # Center the text block vertically
-        y_start = (high_height - total_text_height) // 2
-        
-        # Draw each line with modern styling
-        current_y = y_start
-        for i, line in enumerate(lines):
-            bbox = draw.textbbox((0, 0), line, font=font)
-            text_width = bbox[2] - bbox[0]
-            x = (high_width - text_width) // 2  # Center horizontally
-            
-            # Draw modern text styling with improved shadow and outline
-            shadow_offset = 4 * scale_factor  # Slightly larger shadow
-            outline_width = 6 * scale_factor   # Thicker outline for better readability
-            
-            # Draw multiple shadow layers for depth
-            for shadow_layer in range(2):
-                offset = shadow_offset + (shadow_layer * 2)
-                alpha = 120 - (shadow_layer * 40)  # Fading shadow layers
-                draw.text((x + offset, current_y + offset), line, font=font, fill=(0, 0, 0, alpha))
-            
-            # Draw thick black outline with gradient effect
-            for adj in range(-outline_width, outline_width + 1):
-                for adj2 in range(-outline_width, outline_width + 1):
-                    if adj != 0 or adj2 != 0:
-                        # Stronger outline at the edges
-                        distance = (adj**2 + adj2**2)**0.5
-                        alpha = max(200, 255 - int(distance * 10))
-                        draw.text((x + adj, current_y + adj2), line, font=font, fill=(0, 0, 0, alpha))
-            
-            # Draw main text with slight yellow tint for warmth
-            draw.text((x, current_y), line, font=font, fill=(255, 255, 245, 255))
-            
-            current_y += line_heights[i] + line_spacing
-        
-        # Scale down for anti-aliasing effect
-        print(f"📐 Resizing image from {img.size} to ({width}, {height})")
-        img = img.resize((width, height), Image.LANCZOS)
-        print("✅ Image resized successfully")
-        
-        # Convert to numpy array for MoviePy
-        print("🔄 Converting to numpy array...")
-        result = np.array(img)
-        print(f"✅ Text image created successfully: {result.shape}")
-        return result
-        
-    except Exception as e:
-        print(f"Error creating text image: {e}")
-        return None
-
 # Helper function to estimate speech timing
 def estimate_speech_timing(text, total_duration):
     """Estimate when each word will be spoken based on average speech rate."""
     words = text.split()
     # More realistic speech rate: ~120 words per minute = 2.0 words per second
     # This accounts for natural pauses and slower TTS speech
-    estimated_speech_rate = 2.0  # words per second (reduced from 2.5)
+    estimated_speech_rate = TEXT_TIMING_CONFIG["speech_rate"]
     
     # Calculate timing for each word
     word_timings = []
@@ -307,15 +184,15 @@ def estimate_speech_timing(text, total_duration):
     
     for word in words:
         # More conservative timing with better punctuation handling
-        base_duration = len(word) * 0.12  # Increased from 0.08 to 0.12
+        base_duration = len(word) * TEXT_TIMING_CONFIG["char_duration"]
         
         # Add extra time for punctuation and longer words
         if word.endswith(('.', '!', '?')):
-            base_duration += 0.3  # Pause after sentences
+            base_duration += TEXT_TIMING_CONFIG["sentence_pause"]
         elif word.endswith(','):
-            base_duration += 0.15  # Shorter pause after commas
+            base_duration += TEXT_TIMING_CONFIG["comma_pause"]
         
-        word_duration = max(0.5, base_duration)  # Minimum increased from 0.4s to 0.5s
+        word_duration = max(TEXT_TIMING_CONFIG["min_word_duration"], base_duration)
         word_timings.append({
             'word': word,
             'start': current_time,
@@ -349,10 +226,10 @@ def create_synchronized_text_segments(text, audio_duration, words_per_segment=3)
             original_end = segment_words[-1]['end']
             
             # Add a small buffer to ensure text appears before speech starts
-            segment_start = max(0, original_start - 0.2)  # Show text 0.2s early
+            segment_start = max(0, original_start - TEXT_TIMING_CONFIG["text_early_display"])
             
             # Calculate duration based on the original timing to prevent overlap
-            segment_duration = original_end - original_start + 0.2  # Include the early start buffer
+            segment_duration = original_end - original_start + TEXT_TIMING_CONFIG["text_early_display"]
             
             # Ensure segments don't overlap by checking against previous segment
             if segments:
@@ -362,7 +239,7 @@ def create_synchronized_text_segments(text, audio_duration, words_per_segment=3)
                     # Adjust start time to prevent overlap
                     segment_start = previous_end
                     # Recalculate duration to maintain original end time
-                    segment_duration = max(0.5, original_end - segment_start)
+                    segment_duration = max(TEXT_TIMING_CONFIG["min_segment_duration"], original_end - segment_start)
             
             segments.append({
                 'text': segment_text,
@@ -372,20 +249,8 @@ def create_synchronized_text_segments(text, audio_duration, words_per_segment=3)
     
     return segments
 
-# Helper function to create text segments for video overlay
-def create_text_segments(text, words_per_segment=8):
-    """Split text into segments for display during video."""
-    words = text.split()
-    segments = []
-    
-    for i in range(0, len(words), words_per_segment):
-        segment = ' '.join(words[i:i + words_per_segment])
-        segments.append(segment)
-    
-    return segments
-
 # Helper function to add background music
-def add_background_music(video_path, music_folder="static/music", volume=0.07):
+def add_background_music(video_path, music_folder="static/music", volume=0.15):
     """Add background music to video if music files are available."""
     try:
         if not os.path.exists(music_folder):
@@ -415,21 +280,11 @@ def add_background_music(video_path, music_folder="static/music", volume=0.07):
         final_audio = CompositeAudioClip([video.audio, background_music])
         final_video = video.set_audio(final_audio)
         
-        # Save with background music using high quality settings
+        # Save with background music using shared high quality settings
         output_with_music = video_path.replace('.mp4', '_with_music.mp4')
         final_video.write_videofile(
-            output_with_music, 
-            codec="libx264", 
-            audio_codec="aac",
-            fps=30,  # Higher fps for smoother video
-            bitrate="8000k",  # High bitrate for better quality
-            ffmpeg_params=[
-                "-crf", "18",  # High quality encoding
-                "-preset", "slow",  # Better compression
-                "-profile:v", "high",
-                "-level", "4.0",
-                "-pix_fmt", "yuv420p"
-            ]
+            output_with_music,
+            **VIDEO_CONFIG
         )
         
         return output_with_music
@@ -498,6 +353,7 @@ def create_video_with_text(input_video_file, input_audio_file, text, output_file
                 os.path.join(fonts_dir, "Montserrat-Bold.ttf"),
                 "C:/Windows/Fonts/impact.ttf",
                 "C:/Windows/Fonts/arialbd.ttf",
+                "arial.ttf"  # Final fallback
             ]
             
             selected_font_path = None
@@ -568,22 +424,12 @@ def create_video_with_text(input_video_file, input_audio_file, text, output_file
         # Add audio to the video
         video_with_audio = final_video.set_audio(audio)
 
-        # Write the final video with higher quality settings
+        # Write the final video with shared high quality settings
         video_with_audio.write_videofile(
             output_path,
-            codec="libx264",
-            audio_codec="aac",
             temp_audiofile="temp-audio.m4a",
             remove_temp=True,
-            fps=30,  # Increased from 24 to 30 for smoother video
-            bitrate="8000k",  # High bitrate for better quality
-            ffmpeg_params=[
-                "-crf", "18",  # Lower CRF = higher quality (18 is high quality)
-                "-preset", "slow",  # Slower preset = better compression efficiency
-                "-profile:v", "high",  # High profile for better quality
-                "-level", "4.0",  # H.264 level for good compatibility
-                "-pix_fmt", "yuv420p"  # Standard pixel format for compatibility
-            ]
+            **VIDEO_CONFIG
         )
 
         # Clean up clips
