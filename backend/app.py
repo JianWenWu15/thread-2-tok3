@@ -372,7 +372,33 @@ def estimate_audio_timing_fallback(audio_file_path, text, speech_rate=1.3, voice
 
 # Helper function to create synchronized text segments
 def create_synchronized_text_segments(text, audio_duration, speech_rate=1.3, audio_file_path=None, voice=None):
-    """Create text segments synchronized with speech timing."""
+    """Create text segments synchronized with speech timing using professional subtitle-based approach."""
+    
+    # Try professional subtitle-based synchronization first
+    try:
+        from subtitle_sync import create_professional_text_segments_from_subtitles
+        
+        print("🎯 Attempting professional subtitle-based synchronization...")
+        
+        if audio_file_path and os.path.exists(audio_file_path):
+            professional_segments = create_professional_text_segments_from_subtitles(
+                text, audio_file_path, audio_duration, words_per_segment=4
+            )
+            
+            if professional_segments:
+                print("✅ Using professional subtitle-based synchronization")
+                return professional_segments
+            else:
+                print("⚠️ Professional sync failed, falling back to enhanced method")
+        
+    except Exception as e:
+        print(f"⚠️ Professional sync unavailable: {e}, using enhanced fallback")
+    
+    # Enhanced fallback method with improved timing
+    return create_enhanced_fallback_segments(text, audio_duration, speech_rate, audio_file_path, voice)
+
+def create_enhanced_fallback_segments(text, audio_duration, speech_rate=1.3, audio_file_path=None, voice=None):
+    """Enhanced fallback synchronization with improved timing."""
     
     # Get precise word timings from audio analysis
     if audio_file_path and os.path.exists(audio_file_path):
@@ -386,48 +412,89 @@ def create_synchronized_text_segments(text, audio_duration, speech_rate=1.3, aud
         return []
     
     segments = []
-    words_per_segment = 4  # Optimized for 1.3x speed
+    words_per_segment = 4
     
-    print(f"🔤 Using {words_per_segment} words per segment")
+    print(f"🔤 Using {words_per_segment} words per segment with enhanced fallback timing")
     
-    # Group words into segments using actual speech timing
-    for i in range(0, len(word_timings), words_per_segment):
-        segment_words = word_timings[i:i + words_per_segment]
+    # Use actual word timings when available for better sync
+    total_words = len(text.split())
+    
+    # Create segments using actual word timing data
+    for i in range(0, total_words, words_per_segment):
+        segment_words = text.split()[i:i + words_per_segment]
+        segment_index = i // words_per_segment
+        
         if segment_words:
-            segment_text = ' '.join([word['word'] for word in segment_words])
+            segment_text = ' '.join(segment_words)
             
-            segment_start = segment_words[0]['start']
-            segment_end = segment_words[-1]['end']
-            segment_duration = segment_end - segment_start
+            # Use word timings for accurate speech timing
+            if word_timings and i < len(word_timings):
+                # Get timing for the first word in segment
+                segment_speech_start = word_timings[i]['start']
+                
+                # Get timing for the last word in segment 
+                last_word_idx = min(i + len(segment_words) - 1, len(word_timings) - 1)
+                segment_speech_end = word_timings[last_word_idx]['end']
+            else:
+                # Fallback to proportional timing if word data missing
+                total_segments = (total_words + words_per_segment - 1) // words_per_segment
+                time_per_segment = audio_duration / total_segments
+                segment_speech_start = segment_index * time_per_segment
+                segment_speech_end = (segment_index + 1) * time_per_segment
             
-            # Ensure minimum duration
-            min_duration = 0.6
-            if segment_duration < min_duration:
-                segment_duration = min_duration
+            # Text appears before speech starts (optimized early display)
+            early_display = 0.15  # 150ms early - balanced for good sync without excessive delay
+            intended_start = max(0, segment_speech_start - early_display)
+            text_start = intended_start
             
-            # Ensure we don't exceed audio bounds
-            if segment_start + segment_duration > audio_duration:
-                segment_duration = max(0.4, audio_duration - segment_start)
-            
-            # Prevent overlapping with previous segments
+            # Smart overlap prevention - adjust both current and previous segments
+            overlap_adjustment = 0
             if segments:
-                previous_segment = segments[-1]
-                previous_end = previous_segment['start'] + previous_segment['duration']
-                if segment_start < previous_end:
-                    segment_start = previous_end + 0.01
-                    remaining_time = audio_duration - segment_start
-                    segment_duration = min(segment_duration, remaining_time)
+                prev_segment = segments[-1]
+                prev_end = prev_segment['start'] + prev_segment['duration']
+                
+                if text_start < prev_end:
+                    overlap_amount = prev_end - text_start
+                    
+                    # Strategy: Split the overlap adjustment between shortening previous 
+                    # segment and slightly delaying current one
+                    prev_reduction = min(overlap_amount * 0.7, prev_segment['duration'] - 0.5)
+                    current_delay = overlap_amount - prev_reduction + 0.05
+                    
+                    # Update previous segment duration
+                    segments[-1]['duration'] = max(0.5, prev_segment['duration'] - prev_reduction)
+                    
+                    # Move current segment start
+                    text_start = intended_start + current_delay
+                    overlap_adjustment = current_delay
+                    
+                    print(f"    🔧 Smart overlap fix: prev shortened -{prev_reduction:.2f}s, current delayed +{current_delay:.2f}s")
             
-            # Only add meaningful segments
-            if segment_start < audio_duration and segment_duration > 0.4:
+            # Adaptive reading buffer based on position
+            if len(segments) == 0:
+                reading_buffer = 0.4  # First segment gets longer buffer
+            else:
+                reading_buffer = 0.25  # Later segments get shorter buffer
+            text_duration = (segment_speech_end - text_start) + reading_buffer
+            
+            # Don't exceed audio bounds
+            if text_start + text_duration > audio_duration:
+                text_duration = audio_duration - text_start
+            
+            if text_start < audio_duration and text_duration > 0.3:
+                lead_time = text_start - segment_speech_start
                 segments.append({
                     'text': segment_text,
-                    'start': segment_start,
-                    'duration': segment_duration,
-                    'confidence': 'voice-optimized' if audio_file_path else 'estimated'
+                    'start': text_start,
+                    'duration': text_duration,
+                    'word_count': len(segment_words),
+                    'speech_start': segment_speech_start,
+                    'confidence': 'word_timing' if word_timings and i < len(word_timings) else 'fallback'
                 })
+                
+                print(f"  Seg {segment_index + 1}: '{segment_text[:20]}...' Text@{text_start:.2f}s Speech@{segment_speech_start:.2f}s Lead={lead_time:+.2f}s{' (delayed +{:.2f}s)'.format(overlap_adjustment) if overlap_adjustment > 0 else ''}")
     
-    print(f"📋 Created {len(segments)} text segments")
+    print(f"📋 Created {len(segments)} text segments with enhanced fallback timing")
     
     # Debug output
     if segments:
