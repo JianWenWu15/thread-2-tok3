@@ -6,3 +6,5 @@ flask-cors
 gunicorn
 edge-tts
 pydub
+google-generativeai
+python-dotenv

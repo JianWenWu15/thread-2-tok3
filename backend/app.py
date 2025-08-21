@@ -11,6 +11,16 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import json
 
+# Import AI story generator
+try:
+    from ai_story_generator import create_ai_enhanced_story
+    AI_AVAILABLE = True
+    print("✅ AI story generation available (Google Gemini)")
+except ImportError as e:
+    AI_AVAILABLE = False
+    print(f"⚠️ AI story generation not available: {e}")
+    print("   Set GOOGLE_API_KEY in .env and install: pip install google-generativeai")
+
 # Fix for Pillow 10.x compatibility with MoviePy
 try:
     if not hasattr(Image, 'ANTIALIAS'):
@@ -49,9 +59,9 @@ AUDIO_CONFIG = {
 
 # Reddit API setup
 reddit = praw.Reddit(
-    client_id=os.getenv("CLIENT_ID"),
-    client_secret=os.getenv("CLIENT_SECRET"),
-    user_agent="thread-2-tok/0.1 by u/Complex_Balance4016"
+    client_id=os.getenv("REDDIT_CLIENT_ID"),
+    client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+    user_agent=os.getenv("REDDIT_USER_AGENT")
 )
 
 # Helper function to fetch a Reddit story
@@ -65,6 +75,54 @@ def fetch_story(subreddit="AmItheAsshole"):
             "title": selected_post.title,
             "body": selected_post.selftext
         }
+    return None
+
+# New function to get story content based on mode
+def get_story_content():
+    """Get story content based on the configured story mode."""
+    story_mode = os.getenv("STORY_MODE", "ai_enhanced").lower()
+    
+    print(f"🎯 Story Generation Mode: {story_mode}")
+    
+    if story_mode == "ai_enhanced" and AI_AVAILABLE:
+        print("🤖 Using AI-Enhanced Story Generation...")
+        
+        # Define target subreddits for inspiration
+        inspiration_subreddits = [
+            'AmItheAsshole',
+            'relationship_advice',
+            'tifu',
+            'offmychest', 
+            'entitledparents',
+            'maliciouscompliance',
+            'pettyrevenge',
+            'choosingbeggars',
+            'family'
+        ]
+        
+        # Generate AI-enhanced original story
+        story_text = create_ai_enhanced_story(reddit, inspiration_subreddits)
+        
+        if story_text:
+            print(f"✅ AI-generated story created ({len(story_text.split())} words)")
+            return story_text
+        else:
+            print("❌ AI story generation failed, falling back to direct Reddit fetch...")
+            # Fall through to direct Reddit method
+    
+    elif story_mode == "ai_enhanced" and not AI_AVAILABLE:
+        print("❌ AI mode requested but not available, using direct Reddit fetch...")
+    
+    # Direct Reddit fetching (original method or fallback)
+    print("📱 Using Direct Reddit Story Fetch...")
+    subreddit_name = os.getenv("FALLBACK_SUBREDDIT", "AmItheAsshole")
+    story = fetch_story(subreddit_name)
+    
+    if story:
+        story_text = f"{story['title']} {story['body']}"
+        print(f"✅ Reddit story fetched from r/{subreddit_name} ({len(story_text.split())} words)")
+        return story_text
+    
     return None
 
 # Helper function to clean and process text
@@ -382,7 +440,7 @@ def create_synchronized_text_segments(text, audio_duration, speech_rate=1.3, aud
         
         if audio_file_path and os.path.exists(audio_file_path):
             professional_segments = create_professional_text_segments_from_subtitles(
-                text, audio_file_path, audio_duration, words_per_segment=4
+                text, audio_file_path, audio_duration, words_per_segment=4, speech_rate=speech_rate
             )
             
             if professional_segments:
@@ -695,66 +753,73 @@ def create_video_with_text(input_video_file, input_audio_file, text, output_file
         return None
 
 if __name__ == "__main__":
-    print("🎬 Reddit Story to Video Generator")
-    print("Generating video with text overlays and background music...")
+    print("🎬 AI-Enhanced Reddit Story to Video Generator")
+    print("Generating video with AI-enhanced stories and professional synchronization...")
 
-    # Fetch story
-    subreddit_name = "AmItheAsshole"
-    story = fetch_story(subreddit_name)
-
-    if story:
-        print(f"✅ Story fetched from r/{subreddit_name}")
-        print(f"Title: {story['title'][:100]}...")
-        
-        # Process text
-        raw_text = f"{story['title']} {story['body']}"
-        processed_text = process_text(raw_text)
-        print(f"📝 Text processed (length: {len(processed_text)} characters)")
-        
-        # Calculate speech rate
-        optimal_speed = calculate_optimal_speech_rate(processed_text)
-
-        # File paths
-        input_video = os.path.join(os.getcwd(), "static/minecraft_background.mp4")
-        input_audio = os.path.join(os.getcwd(), "narration.wav")
-        output_video = os.path.join(os.getcwd(), "generated_video.mp4")
-
-        # Generate narration
-        print("🎤 Generating narration...")
-        selected_voice = select_voice_for_perspective(processed_text)
-        narration_path = generate_narration(processed_text, input_audio, speech_rate=str(optimal_speed))
-
-        if narration_path and os.path.exists(input_video):
-            print("🎬 Creating video with text overlays...")
-            video_path = create_video_with_text(input_video, input_audio, processed_text, output_video, optimal_speed, selected_voice)
-            
-            if video_path:
-                print(f"✅ Base video created: {video_path}")
-                
-                # Add background music
-                print("🎵 Adding background music...")
-                final_video_path = add_background_music(video_path)
-                print(f"🎉 Final video created: {final_video_path}")
-                
-                # Print summary
-                print("\n" + "="*50)
-                print("VIDEO GENERATION COMPLETE!")
-                print("="*50)
-                print(f"Output file: {final_video_path}")
-                print(f"Text length: {len(processed_text)} characters")
-                print(f"Speech rate: {optimal_speed:.1f}x speed")
-                print(f"Voice: {selected_voice}")
-                print(f"Quality: 1080p, 60 FPS, 10 Mbps")
-                print(f"Audio: 320k AAC stereo")
-                print(f"Background music: {'Added' if final_video_path != video_path else 'Not added'}")
-                print("="*50)
-            else:
-                print("Error: Video generation failed.")
-        else:
-            print("Error: Input files not found.")
-            if not os.path.exists(input_video):
-                print(f"   Missing: {input_video}")
-            if not narration_path:
-                print("   Failed to generate narration")
+    # Check AI availability status
+    if AI_AVAILABLE:
+        print("✅ AI Story Generation: Available")
     else:
-        print(f"❌ No stories found in r/{subreddit_name}.")
+        print("⚠️  AI Story Generation: Not Available (using Reddit fallback)")
+
+    # Get story content based on configuration
+    story_text = get_story_content()
+    
+    if not story_text:
+        print("❌ Failed to fetch story content")
+        exit(1)
+    
+    print(f"📖 Story Content Preview: {story_text[:100]}...")
+    
+    # Process text
+    processed_text = process_text(story_text)
+    print(f"📝 Text processed (length: {len(processed_text)} characters)")
+    
+    # Calculate speech rate
+    optimal_speed = calculate_optimal_speech_rate(processed_text)
+
+    # File paths
+    input_video = os.path.join(os.getcwd(), "static/minecraft_background.mp4")
+    input_audio = os.path.join(os.getcwd(), "narration.wav")
+    output_video = os.path.join(os.getcwd(), "generated_video.mp4")
+
+    # Generate narration
+    print("🎤 Generating narration...")
+    selected_voice = select_voice_for_perspective(processed_text)
+    narration_path = generate_narration(processed_text, input_audio, speech_rate=str(optimal_speed))
+
+    if narration_path and os.path.exists(input_video):
+        print("🎬 Creating video with professional synchronized text overlays...")
+        video_path = create_video_with_text(input_video, input_audio, processed_text, output_video, optimal_speed, selected_voice)
+        
+        if video_path:
+            print(f"✅ Base video created: {video_path}")
+            
+            # Add background music
+            print("🎵 Adding background music...")
+            final_video_path = add_background_music(video_path)
+            print(f"🎉 Final video created: {final_video_path}")
+            
+            # Print summary
+            print("\n" + "="*50)
+            print("AI-ENHANCED VIDEO GENERATION COMPLETE!")
+            print("="*50)
+            print(f"Output file: {final_video_path}")
+            print(f"Story mode: {os.getenv('STORY_MODE', 'ai_enhanced')}")
+            print(f"AI available: {AI_AVAILABLE}")
+            print(f"Text length: {len(processed_text)} characters")
+            print(f"Speech rate: {optimal_speed:.1f}x speed")
+            print(f"Voice: {selected_voice}")
+            print(f"Quality: 1080p, 60 FPS, 10 Mbps")
+            print(f"Audio: 320k AAC stereo")
+            print(f"Synchronization: Professional forced alignment")
+            print(f"Background music: {'Added' if final_video_path != video_path else 'Not added'}")
+            print("="*50)
+        else:
+            print("Error: Video generation failed.")
+    else:
+        print("Error: Input files not found.")
+        if not os.path.exists(input_video):
+            print(f"   Missing: {input_video}")
+        if not narration_path:
+            print("   Failed to generate narration")

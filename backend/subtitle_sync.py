@@ -231,7 +231,7 @@ class SubtitleTimingEngine:
         else:
             return data.get('timings', [])
     
-    def create_professional_text_segments(self, subtitle_path: str, words_per_segment: int = 4) -> List[Dict]:
+    def create_professional_text_segments(self, subtitle_path: str, words_per_segment: int = 4, speech_rate: float = 1.3) -> List[Dict]:
         """
         Create professional text segments from subtitle timing data.
         
@@ -245,6 +245,16 @@ class SubtitleTimingEngine:
         word_timings = self.load_subtitle_timing(subtitle_path)
         if not word_timings:
             return []
+        
+        # Apply speech rate correction to timings
+        # When speech is sped up by 1.3x, events happen 1/1.3 = 0.77x as fast
+        time_factor = 1.0 / speech_rate if speech_rate > 0 else 1.0
+        
+        if speech_rate != 1.0:
+            print(f"🎯 Applying speech rate correction: {speech_rate}x speed (time factor: {time_factor:.3f})")
+            for word_info in word_timings:
+                word_info['start'] *= time_factor
+                word_info['end'] *= time_factor
         
         segments = []
         current_segment_words = []
@@ -371,7 +381,7 @@ class SubtitleTimingEngine:
         return f"{hours:02d}:{minutes:02d}:{secs:02d},{millisecs:03d}"
 
 
-def create_professional_text_segments_from_subtitles(text: str, audio_path: str, audio_duration: float, words_per_segment: int = 4) -> List[Dict]:
+def create_professional_text_segments_from_subtitles(text: str, audio_path: str, audio_duration: float, words_per_segment: int = 4, speech_rate: float = 1.3) -> List[Dict]:
     """
     Create professional text segments using subtitle-based timing.
     
@@ -390,8 +400,8 @@ def create_professional_text_segments_from_subtitles(text: str, audio_path: str,
             print("❌ Failed to create subtitle file, falling back to basic timing")
             return []
         
-        # Create professional text segments from subtitles
-        segments = engine.create_professional_text_segments(subtitle_path, words_per_segment)
+        # Create professional text segments from subtitles with speech rate adjustment
+        segments = engine.create_professional_text_segments(subtitle_path, words_per_segment, speech_rate)
         
         if segments:
             print(f"✅ Professional synchronization complete: {len(segments)} segments")
